@@ -1,6 +1,5 @@
 name: Manual Maven CI
 
-# ✅ Manual trigger only
 on:
   workflow_dispatch:
 
@@ -23,25 +22,24 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
 
+    # ✅ This creates ~/.m2/settings.xml automatically
     - name: Configure Maven to use PAT
       env:
         USERNAME: akshaycr007
         TOKEN: ${{ secrets.PAT_TOKEN }}
       run: |
         mkdir -p ~/.m2
-        cat <<EOF > ~/.m2/settings.xml
-        <settings>
-          <servers>
-            <server>
-              <id>github</id>
-              <username>${USERNAME}</username>
-              <password>${TOKEN}</password>
-            </server>
-          </servers>
-        </settings>
-        EOF
+        echo "<settings>" > ~/.m2/settings.xml
+        echo "  <servers>" >> ~/.m2/settings.xml
+        echo "    <server>" >> ~/.m2/settings.xml
+        echo "      <id>github</id>" >> ~/.m2/settings.xml
+        echo "      <username>${USERNAME}</username>" >> ~/.m2/settings.xml
+        echo "      <password>${TOKEN}</password>" >> ~/.m2/settings.xml
+        echo "    </server>" >> ~/.m2/settings.xml
+        echo "  </servers>" >> ~/.m2/settings.xml
+        echo "</settings>" >> ~/.m2/settings.xml
 
-    - name: Build & run tests
+    - name: Build & Run Tests
       run: mvn -B clean package
 
     - name: List Build Artifacts
