@@ -1,0 +1,58 @@
+name: Manual Maven CI
+
+# ✅ Manual trigger only
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  manual-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # ✅ Checkout repository
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # ✅ Install JDK 17
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    # ✅ Configure Maven to use your PAT
+    # PAT must be saved in repo secret: PAT_TOKEN
+    - name: Configure Maven to use PAT
+      env:
+        USERNAME: akshaycr007
+        TOKEN: ${{ secrets.PAT_TOKEN }}
+      run: |
+        mkdir -p ~/.m2
+        cat <<EOF > ~/.m2/settings.xml
+        <settings>
+          <servers>
+            <server>
+              <id>github</id>
+              <username>${USERNAME}</username>
+              <password>${TOKEN}</password>
+            </server>
+          </servers>
+        </settings>
+        EOF
+
+    # ✅ Build project & run tests (this will fail if tests fail)
+    - name: Build & Run Tests
+      run: mvn -B clean package
+
+    # ✅ Show generated JAR
+    - name: List Build Artifacts
+      run: ls -R target
+
+    # ✅ Publish JAR to GitHub Packages
+    - name: Publish to GitHub Packages
+      run: mvn -B deploy -s ~/.m2/settings.xml
